@@ -22,6 +22,7 @@ export default function Quiz() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   
   const navigate = useNavigate();
@@ -76,7 +77,7 @@ export default function Quiz() {
     return () => clearInterval(timerRef.current as NodeJS.Timeout);
   }, [timeLeft]);
 
-  const handleSelect = async (option: string) => {
+  const handleSelect = async (option: string | null) => {
     const q = questions[currentIndex];
     
     // Optimistic update
@@ -123,9 +124,11 @@ export default function Quiz() {
     return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   };
 
-  if (questions.length === 0) return <div className="min-h-screen bg-cyber-bg flex items-center justify-center text-cyber-teal">LOADING SYS_FILES...</div>;
+  if (questions.length === 0) return <div className="min-h-screen bg-cyber-bg flex items-center justify-center text-cyber-teal font-mono">LOADING SYS_FILES...</div>;
 
   const q = questions[currentIndex];
+  const answeredCount = questions.filter(q => q.selectedOption).length;
+  const unansweredCount = questions.length - answeredCount;
 
   const getStatusColor = (idx: number) => {
     if (idx === currentIndex) return 'bg-cyber-gold text-black';
@@ -135,6 +138,44 @@ export default function Quiz() {
 
   return (
     <div className="min-h-screen flex flex-col bg-[#05080A]">
+
+      {/* ── Confirm Submit Modal ── */}
+      {showConfirmModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
+          <div className="glass-panel rounded-lg p-8 max-w-md w-full mx-4 border border-cyber-gold/40">
+            <h2 className="text-2xl font-bold text-cyber-gold font-mono mb-2 tracking-widest">CONFIRM SUBMIT?</h2>
+            <p className="text-gray-400 mb-6 text-sm leading-relaxed">
+              You are about to lock your answers. This action is <span className="text-cyber-red font-bold">irreversible</span>.
+            </p>
+            <div className="grid grid-cols-2 gap-3 mb-6 text-sm font-mono">
+              <div className="bg-[#0a1a15] border border-cyber-green/30 rounded p-3 text-center">
+                <div className="text-2xl font-bold text-cyber-green">{answeredCount}</div>
+                <div className="text-gray-400 text-xs mt-1">Answered</div>
+              </div>
+              <div className="bg-[#1a0a0a] border border-cyber-red/30 rounded p-3 text-center">
+                <div className="text-2xl font-bold text-cyber-red">{unansweredCount}</div>
+                <div className="text-gray-400 text-xs mt-1">Unanswered</div>
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowConfirmModal(false)}
+                className="flex-1 py-3 border border-cyber-border text-gray-300 rounded hover:bg-white/5 transition font-mono text-sm"
+              >
+                CANCEL
+              </button>
+              <button
+                onClick={() => { setShowConfirmModal(false); handleSubmit(); }}
+                disabled={isSubmitting}
+                className="flex-1 py-3 bg-cyber-red text-white rounded hover:bg-red-600 transition font-bold font-mono text-sm"
+              >
+                {isSubmitting ? 'SUBMITTING...' : 'LOCK & SUBMIT'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Top Header */}
       <header className="h-16 border-b border-cyber-border bg-[#0B1114] flex items-center justify-between px-6 shrink-0">
         <div className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyber-teal to-cyber-gold">BUGSUGI</div>
@@ -187,6 +228,16 @@ export default function Quiz() {
                   );
                 })}
               </div>
+
+              {/* Clear Answer Button */}
+              {q.selectedOption && (
+                <button
+                  onClick={() => handleSelect(null)}
+                  className="mt-4 text-xs text-gray-500 hover:text-cyber-red transition-colors font-mono flex items-center gap-1 underline underline-offset-2"
+                >
+                  ✕ Clear Selection
+                </button>
+              )}
             </motion.div>
 
             {/* Nav Buttons */}
@@ -200,9 +251,13 @@ export default function Quiz() {
               </button>
 
               {currentIndex === questions.length - 1 ? (
-                 <button onClick={handleSubmit} disabled={isSubmitting} className="btn-primary bg-cyber-red hover:bg-red-600 shadow-none border-none">
-                   {isSubmitting ? 'SUBMITTING...' : 'FINISH EXAM'}
-                 </button>
+                <button
+                  onClick={() => setShowConfirmModal(true)}
+                  disabled={isSubmitting}
+                  className="bg-cyber-red text-white font-bold py-3 px-6 rounded-md hover:bg-red-600 transition-all font-mono tracking-widest text-sm"
+                >
+                  FINISH EXAM
+                </button>
               ) : (
                 <button 
                   onClick={() => setCurrentIndex(prev => Math.min(questions.length - 1, prev + 1))}
@@ -220,8 +275,8 @@ export default function Quiz() {
           <div className="p-4 border-b border-cyber-border shrink-0">
              <h3 className="text-white font-bold tracking-widest text-sm mb-4">QUESTION PALETTE</h3>
              <div className="flex flex-col gap-2 text-xs">
-                <div className="flex items-center gap-2"><div className="w-4 h-4 bg-cyber-green rounded-sm"></div> Answered</div>
-                <div className="flex items-center gap-2"><div className="w-4 h-4 bg-cyber-gray rounded-sm"></div> Unanswered</div>
+                <div className="flex items-center gap-2"><div className="w-4 h-4 bg-cyber-green rounded-sm"></div> Answered <span className="ml-auto font-bold text-cyber-green">{answeredCount}</span></div>
+                <div className="flex items-center gap-2"><div className="w-4 h-4 bg-cyber-gray rounded-sm"></div> Unanswered <span className="ml-auto font-bold text-gray-400">{unansweredCount}</span></div>
                 <div className="flex items-center gap-2"><div className="w-4 h-4 bg-cyber-gold rounded-sm"></div> Current</div>
              </div>
           </div>
@@ -238,6 +293,16 @@ export default function Quiz() {
                 </button>
               ))}
             </div>
+          </div>
+
+          {/* Submit from sidebar too */}
+          <div className="p-4 border-t border-cyber-border">
+            <button
+              onClick={() => setShowConfirmModal(true)}
+              className="w-full py-3 bg-cyber-red text-white font-bold rounded hover:bg-red-600 transition font-mono text-sm tracking-widest"
+            >
+              FINISH EXAM
+            </button>
           </div>
         </div>
 

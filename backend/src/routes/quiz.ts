@@ -34,17 +34,21 @@ router.post('/start', verifyTeam, async (req: AuthRequest, res: Response): Promi
             return;
         }
 
-        // Initialize quiz: randomly select questions
+        // Get all questions from pool
         const allQuestions = await prisma.question.findMany();
         if (allQuestions.length === 0) {
             res.status(400).json({ error: 'No questions available' });
             return;
         }
 
-        // Shuffle up to 120 questions
-        const shuffled = shuffleArray(allQuestions).slice(0, 120);
+        // Read how many questions per team from settings (default: 30)
+        const qPerTeamSetting = await prisma.settings.findUnique({ where: { key: 'QUESTIONS_PER_TEAM' } });
+        const questionsPerTeam = qPerTeamSetting ? parseInt(qPerTeamSetting.value) : 30;
 
-        // Assign shuffled order to team
+        // Shuffle the full pool and pick a unique random subset for this team
+        const shuffled = shuffleArray(allQuestions).slice(0, Math.min(questionsPerTeam, allQuestions.length));
+
+        // Assign to team
         await prisma.teamQuestionSequence.createMany({
             data: shuffled.map((q, index) => ({
                 teamId: team.id,

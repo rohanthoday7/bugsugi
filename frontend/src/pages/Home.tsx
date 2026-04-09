@@ -1,80 +1,98 @@
-import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { Terminal, Shield, Cpu, Play } from 'lucide-react';
 
 export default function Home() {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen flex flex-col relative overflow-hidden bg-cyber-bg">
-      {/* Abstract Background Elements */}
-      <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-cyber-teal rounded-full blur-[150px] opacity-10"></div>
-      <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] bg-cyber-gold rounded-full blur-[150px] opacity-5"></div>
-      
-      <div className="flex-1 relative z-10 flex flex-col items-center justify-center p-6 text-center">
-        
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          className="mb-8 relative"
-        >
-          {/* Logo / Title */}
-          <h1 className="text-7xl md:text-9xl font-black tracking-widest text-transparent bg-clip-text bg-gradient-to-br from-cyber-gold to-yellow-600 drop-shadow-[0_0_10px_rgba(195,161,101,0.5)]">
-            BUGSUGI
-          </h1>
-          <motion.div 
-            initial={{ width: 0 }}
-            animate={{ width: '100%' }}
-            transition={{ delay: 0.6, duration: 1 }}
-            className="h-1 bg-gradient-to-r from-transparent via-cyber-teal to-transparent mt-2"
-          />
-        </motion.div>
+    <div className="bs-root">
+      <div className="bs-grid-bg"></div>
+      <div className="bs-vignette"></div>
+      <div className="bs-scanline"></div>
 
-        <motion.h2 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.4, duration: 0.8 }}
-          className="text-2xl md:text-3xl font-light text-gray-300 mb-12 tracking-wide font-mono"
-        >
-          Round 1 <span className="text-cyber-teal">MCQ</span> Challenge
-        </motion.h2>
+      <nav className="bs-nav">
+        <div className="bs-nav-logo">
+          <span className="bs-pulse"></span>BUGSUGI // ROUND_01
+        </div>
+        <ul className="bs-nav-links">
+          <li><a href="/" onClick={(e) => { e.preventDefault(); }}>Home</a></li>
+          <li><a href="/instructions" onClick={(e) => { e.preventDefault(); navigate('/instructions'); }}>Instructions</a></li>
+          <li><a href="/admin" onClick={(e) => { e.preventDefault(); navigate('/admin'); }}>Admin</a></li>
+        </ul>
+      </nav>
 
-        <motion.div 
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.8, duration: 0.5 }}
-          className="flex flex-col md:flex-row gap-6 w-full max-w-md md:max-w-xl mx-auto"
-        >
-          <button 
-            onClick={() => navigate('/login')}
-            className="flex-1 btn-primary flex items-center justify-center gap-2 text-lg"
-          >
-            <Play size={20} />
-            Start Quiz
+      <section className="bs-hero">
+        <div className="bs-tag">MCQ Challenge — Round 1</div>
+
+        <div className="bs-logo-wrap animate-bs-float">
+          <img src="/icons.svg" alt="BugSugi Logo" style={{ filter: "drop-shadow(0 0 10px #19c5b4)" }} />
+        </div>
+
+        <h1 className="bs-title">BUGSUGI</h1>
+        <p className="bs-sub">// Technical Trivia · Season 2026</p>
+        <p className="bs-desc">
+          Bugsugi is an exciting code-fixing event featured in the Samavarthan fest, organized and hosted by MVSR, where participants debug and optimize code to showcase their problem-solving skills.
+        </p>
+
+        <div className="bs-actions">
+          <button className="bs-btn-primary" onClick={() => navigate('/login')}>
+            Enter Arena
           </button>
-          
-          <button 
-            onClick={() => navigate('/admin')}
-            className="flex-1 btn-secondary flex items-center justify-center gap-2 text-lg"
-          >
-            <Shield size={20} />
-            Admin Login
+          <button className="bs-btn-secondary" onClick={() => navigate('/instructions')}>
+            View Instructions
           </button>
-        </motion.div>
+        </div>
+      </section>
+
+      <div className="bs-divider">
+        <div className="bs-divider-line"></div>
+        <div className="bs-divider-dot"></div>
+        <div className="bs-divider-line"></div>
       </div>
 
-      {/* Futuristic Footer Stats/Icons */}
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 1.2, duration: 0.8 }}
-        className="w-full glass-panel py-6 px-12 flex justify-between items-center text-sm text-gray-400 font-mono z-10"
-      >
-        <div className="flex items-center gap-2"><Terminal size={16} className="text-cyber-teal"/> V 1.0.0_STABLE</div>
-        <div className="flex items-center gap-2"><Cpu size={16} className="text-cyber-gold"/> SECURE_CON_ESTABLISHED</div>
-        <div className="hidden md:block flex items-center gap-2"><Shield size={16} className="text-cyber-green"/> ALL_SYSTEMS_NOMINAL</div>
-      </motion.div>
+      <div className="bs-stats">
+        <div className="bs-stat">
+          <div className="bs-stat-val">120</div>
+          <div className="bs-stat-label">Questions</div>
+        </div>
+        <div className="bs-stat">
+          <div className="bs-stat-val">
+            60<span style={{ fontSize: '18px', color: 'rgba(25,197,180,0.6)' }}>min</span>
+          </div>
+          <div className="bs-stat-label">Time Limit</div>
+        </div>
+        <div className="bs-stat">
+          <div className="bs-stat-val">1</div>
+          <div className="bs-stat-label">Attempt</div>
+        </div>
+        <div className="bs-stat">
+          <div className="bs-stat-val">∞</div>
+          <div className="bs-stat-label">Stakes</div>
+        </div>
+      </div>
+
+      <div className="bs-features">
+        <div className="bs-feature">
+          <div className="bs-corner bs-corner-tl"></div>
+          <div className="bs-feature-icon">01 // SECURE</div>
+          <p className="bs-feature-title">Anti-Cheat Layer</p>
+          <p className="bs-feature-text">Tab-switch detection with auto-submit on repeated violations. Right-click disabled.</p>
+        </div>
+        <div className="bs-feature">
+          <div className="bs-feature-icon">02 // ADAPTIVE</div>
+          <p className="bs-feature-title">Auto-Save Engine</p>
+          <p className="bs-feature-text">Every answer synced to the server in real time. No data loss on disconnects.</p>
+        </div>
+        <div className="bs-feature">
+          <div className="bs-corner bs-corner-br"></div>
+          <div className="bs-feature-icon">03 // LIVE</div>
+          <p className="bs-feature-title">Live Leaderboard</p>
+          <p className="bs-feature-text">Rankings update instantly after submission. Track your position among peers.</p>
+        </div>
+      </div>
+
+      <footer className="bs-footer">
+        <p className="bs-footer-text">BugSugi © 2026 — Technical Events Division — All systems nominal</p>
+      </footer>
     </div>
   );
 }

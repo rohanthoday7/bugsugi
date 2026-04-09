@@ -130,4 +130,32 @@ router.get('/leaderboard', async (req: AuthRequest, res: Response): Promise<void
     }
 });
 
+// ------------ TEAM DETAIL (answers per team) ------------
+router.get('/teams/:id/answers', async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+        const team = await prisma.team.findUnique({
+            where: { id: req.params.id },
+            select: { id: true, username: true, score: true, correctAnswers: true, wrongAnswers: true, status: true, startTime: true, endTime: true }
+        });
+        if (!team) {
+            res.status(404).json({ error: 'Team not found' });
+            return;
+        }
+
+        const answers = await prisma.teamQuestionSequence.findMany({
+            where: { teamId: req.params.id },
+            orderBy: { orderIndex: 'asc' },
+            include: {
+                question: {
+                    select: { text: true, optionA: true, optionB: true, optionC: true, optionD: true, correctOption: true }
+                }
+            }
+        });
+
+        res.json({ team, answers });
+    } catch (err) {
+        res.status(500).json({ error: 'Server error' });
+    }
+});
+
 export default router;

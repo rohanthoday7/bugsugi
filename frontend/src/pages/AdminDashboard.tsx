@@ -8,6 +8,8 @@ export default function AdminDashboard() {
   const [questions, setQuestions] = useState<any[]>([]);
   const [leaderboard, setLeaderboard] = useState<any[]>([]);
   const [timerDuration, setTimerDuration] = useState('60');
+  const [questionsPerTeam, setQuestionsPerTeam] = useState('30');
+  const [selectedTeam, setSelectedTeam] = useState<any>(null);
   
   const [newTeam, setNewTeam] = useState({ username: '', password: '' });
   const [newQ, setNewQ] = useState({ text: '', optionA: '', optionB: '', optionC: '', optionD: '', correctOption: 'A' });
@@ -41,10 +43,20 @@ export default function AdminDashboard() {
         const s = await r.json();
         const tSetting = s.find((x: any) => x.key === 'TIMER_DURATION_MINUTES');
         if (tSetting) setTimerDuration(tSetting.value);
+        const qSetting = s.find((x: any) => x.key === 'QUESTIONS_PER_TEAM');
+        if (qSetting) setQuestionsPerTeam(qSetting.value);
       }
     } catch(e) {
       console.error(e);
     }
+  };
+
+  const fetchTeamAnswers = async (teamId: string) => {
+    const r = await fetch(`http://localhost:5000/api/admin/teams/${teamId}/answers`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    const data = await r.json();
+    setSelectedTeam(data);
   };
 
   const handleAddTeam = async (e: React.FormEvent) => {
@@ -88,12 +100,19 @@ export default function AdminDashboard() {
   };
 
   const handleSaveSettings = async () => {
-    await fetch('http://localhost:5000/api/admin/settings', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-      body: JSON.stringify({ key: 'TIMER_DURATION_MINUTES', value: timerDuration })
-    });
-    alert('Settings Saved');
+    await Promise.all([
+      fetch('http://localhost:5000/api/admin/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ key: 'TIMER_DURATION_MINUTES', value: timerDuration })
+      }),
+      fetch('http://localhost:5000/api/admin/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ key: 'QUESTIONS_PER_TEAM', value: questionsPerTeam })
+      })
+    ]);
+    alert('Settings Saved!');
   };
 
   return (
@@ -132,7 +151,58 @@ export default function AdminDashboard() {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 p-10 overflow-y-auto">
+      <div className="flex-1 p-10 overflow-y-auto relative">
+
+        {/* ── Team Detail Modal ── */}
+        {selectedTeam && (
+          <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+            <div className="bg-[#0a0f12] border border-cyber-border rounded-lg w-full max-w-3xl max-h-[90vh] flex flex-col">
+              <div className="p-5 border-b border-cyber-border flex items-center justify-between">
+                <div>
+                  <h3 className="text-xl font-bold text-cyber-gold font-mono">{selectedTeam.team?.username?.toUpperCase()}</h3>
+                  <p className="text-xs text-gray-500 font-mono mt-1">
+                    Score: {selectedTeam.team?.score} &nbsp;|&nbsp;
+                    <span className="text-cyber-green">✓ {selectedTeam.team?.correctAnswers}</span> &nbsp;/&nbsp;
+                    <span className="text-cyber-red">✗ {selectedTeam.team?.wrongAnswers}</span>
+                  </p>
+                </div>
+                <button onClick={() => setSelectedTeam(null)} className="text-gray-400 hover:text-white text-2xl font-bold">✕</button>
+              </div>
+              <div className="overflow-y-auto p-4 space-y-3">
+                {selectedTeam.answers?.map((a: any, i: number) => (
+                  <div key={a.id} className={`p-4 rounded border text-sm font-mono ${
+                    a.selectedOption === null
+                      ? 'border-gray-700 bg-[#0f0f0f]'
+                      : a.isCorrect
+                        ? 'border-cyber-green/40 bg-[#0a1a10]'
+                        : 'border-cyber-red/40 bg-[#1a0a0a]'
+                  }`}>
+                    <p className="text-gray-300 mb-2"><span className="text-gray-500">Q{i + 1}:</span> {a.question.text}</p>
+                    <div className="grid grid-cols-2 gap-1 text-xs mb-2">
+                      {['A','B','C','D'].map(opt => (
+                        <span key={opt} className={`px-2 py-1 rounded ${
+                          a.selectedOption === opt && a.isCorrect ? 'bg-cyber-green/20 text-cyber-green font-bold' :
+                          a.selectedOption === opt && !a.isCorrect ? 'bg-cyber-red/20 text-cyber-red font-bold' :
+                          a.question.correctOption === opt ? 'text-cyber-green' : 'text-gray-500'
+                        }`}>
+                          {opt}: {a.question[`option${opt}`]}
+                          {a.question.correctOption === opt ? ' ✓' : ''}
+                          {a.selectedOption === opt && a.selectedOption !== a.question.correctOption ? ' ✗' : ''}
+                        </span>
+                      ))}
+                    </div>
+                    <p className="text-xs">
+                      {a.selectedOption
+                        ? <span>Chose: <span className={a.isCorrect ? 'text-cyber-green font-bold' : 'text-cyber-red font-bold'}>{a.selectedOption}</span> — {a.isCorrect ? '✅ Correct' : '❌ Wrong'}</span>
+                        : <span className="text-gray-500">— Not Answered</span>
+                      }
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
         <h2 className="text-3xl font-mono mb-8 border-b-2 border-cyber-border pb-4 inline-block">{activeTab}</h2>
 
         {activeTab === 'LEADERBOARD' && (
@@ -232,21 +302,40 @@ export default function AdminDashboard() {
         )}
 
         {activeTab === 'SETTINGS' && (
-          <div className="glass-panel p-6 rounded max-w-md">
-            <h3 className="text-lg text-cyber-gold mb-6 font-mono">Timer Configuration</h3>
-            <div className="mb-6">
-              <label className="block text-gray-400 mb-2 font-mono text-sm">Duration (Minutes)</label>
-              <select 
-                value={timerDuration} 
-                onChange={(e) => setTimerDuration(e.target.value)}
-                className="w-full bg-black/50 border border-cyber-border p-3 text-white focus:outline-none"
-              >
-                <option value="30">30 Minutes</option>
-                <option value="60">60 Minutes (1 Hour)</option>
-                <option value="120">120 Minutes (2 Hours)</option>
-              </select>
+          <div className="glass-panel p-6 rounded max-w-md space-y-8">
+            <div>
+              <h3 className="text-lg text-cyber-gold mb-6 font-mono">⏱ Timer Configuration</h3>
+              <div className="mb-4">
+                <label className="block text-gray-400 mb-2 font-mono text-sm">Duration (Minutes)</label>
+                <select
+                  value={timerDuration}
+                  onChange={(e) => setTimerDuration(e.target.value)}
+                  className="w-full bg-black/50 border border-cyber-border p-3 text-white focus:outline-none"
+                >
+                  <option value="30">30 Minutes</option>
+                  <option value="60">60 Minutes (1 Hour)</option>
+                  <option value="90">90 Minutes</option>
+                  <option value="120">120 Minutes (2 Hours)</option>
+                </select>
+              </div>
             </div>
-            <button onClick={handleSaveSettings} className="w-full btn-primary font-mono text-sm">UPDATE CONFIG</button>
+
+            <div>
+              <h3 className="text-lg text-cyber-gold mb-2 font-mono">❓ Questions Per Team</h3>
+              <p className="text-gray-500 text-xs mb-4 font-mono">Each team gets this many randomly picked questions from your full question pool. Upload more questions than this number to ensure different sets per team.</p>
+              <input
+                type="number"
+                min="1"
+                max="120"
+                value={questionsPerTeam}
+                onChange={(e) => setQuestionsPerTeam(e.target.value)}
+                className="w-full bg-black/50 border border-cyber-border p-3 text-white focus:outline-none font-mono"
+                placeholder="e.g. 30"
+              />
+              <p className="text-gray-600 text-xs mt-2 font-mono">Pool size: {questionsPerTeam} q/team × 100 teams → need ~{Math.ceil(parseInt(questionsPerTeam || '30') * 1.5)}+ questions for good uniqueness</p>
+            </div>
+
+            <button onClick={handleSaveSettings} className="w-full btn-primary font-mono text-sm">SAVE ALL SETTINGS</button>
           </div>
         )}
       </div>
