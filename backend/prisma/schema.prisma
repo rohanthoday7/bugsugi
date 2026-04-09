@@ -1,0 +1,71 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Team {
+  id             String      @id @default(uuid())
+  username       String      @unique
+  passwordHash   String
+  status         String      @default("PENDING") // Enum removed for SQLite compatibility, use String
+  startTime      DateTime?
+  endTime        DateTime?
+  score          Int         @default(0)
+  correctAnswers Int         @default(0)
+  wrongAnswers   Int         @default(0)
+  sessions       Session[]
+  questions      TeamQuestionSequence[]
+}
+
+model Session {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  teamId    String
+  team      Team     @relation(fields: [teamId], references: [id])
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+}
+
+model Question {
+  id            String   @id @default(uuid())
+  text          String
+  optionA       String
+  optionB       String
+  optionC       String
+  optionD       String
+  correctOption String   // "A", "B", "C", or "D"
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  sequences     TeamQuestionSequence[]
+}
+
+model TeamQuestionSequence {
+  id             String   @id @default(uuid())
+  teamId         String
+  questionId     String
+  orderIndex     Int
+  selectedOption String?  // "A", "B", "C", or "D", initialized to null
+  isCorrect      Boolean?
+  team           Team     @relation(fields: [teamId], references: [id])
+  question       Question @relation(fields: [questionId], references: [id])
+
+  @@unique([teamId, questionId])
+  @@unique([teamId, orderIndex]) // Ensure strict ordering 1-120 per team
+}
+
+model Admin {
+  id           String @id @default(uuid())
+  username     String @unique
+  passwordHash String
+}
+
+model Settings {
+  key   String @id
+  value String
+}

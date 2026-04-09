@@ -1,0 +1,64 @@
+@import "tailwindcss";
+
+@theme {
+  --color-cyber-bg: #0b1114;
+  --color-cyber-surface: #10191d;
+  --color-cyber-border: #16403d;
+  --color-cyber-teal: #19c5b4;
+  --color-cyber-teal-hover: #1edbc9;
+  --color-cyber-gold: #c3a165;
+  --color-cyber-gold-muted: #876e43;
+  --color-cyber-green: #22c55e;
+  --color-cyber-red: #ef4444;
+  --color-cyber-gray: #303b41;
+}
+
+@layer base {
+  body {
+    background-color: var(--color-cyber-bg);
+    color: #e2e8f0;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+}
+
+/* Scrollbar styles to match theme */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-cyber-bg);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-cyber-border);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-cyber-teal);
+}
+
+.glass-panel {
+  background: rgba(16, 25, 29, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--color-cyber-border);
+}
+
+.text-gold {
+  color: var(--color-cyber-gold);
+}
+
+.text-teal {
+  color: var(--color-cyber-teal);
+}
+
+.border-teal {
+  border-color: var(--color-cyber-teal);
+}
+
+.btn-primary {
+  @apply bg-cyber-teal text-cyber-bg font-bold py-3 px-6 rounded-md hover:bg-cyber-teal-hover transition-all duration-300 transform hover:scale-105 shadow-[0_0_15px_rgba(25,197,180,0.4)];
+}
+
+.btn-secondary {
+  @apply bg-transparent border-2 border-cyber-gold text-cyber-gold font-bold py-3 px-6 rounded-md hover:bg-[rgba(195,161,101,0.1)] transition-all duration-300;
+}
